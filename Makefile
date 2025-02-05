@@ -1,4 +1,4 @@
-all: lint build_hugo_builder build_website serve_website healthcheck clean
+all: lint dockerlint_policies_check build_hugo_builder build_website trivy_scanner serve_website healthcheck clean
 
 server_port = 1313
 server_container_name := hugo_server_$(shell uuidgen)
@@ -9,7 +9,12 @@ lint:
 	@docker run --rm -v $(PWD)/hadolint.yml:/.config/hadolint.yml -i hadolint/hadolint < Dockerfile
 	@echo "Linting completed"
 
-build_hugo_builder: lint
+dockerlint_policies_check: 
+	@echo "Checking required policies"
+	@docker run --rm -v $(PWD):/root/ -v /var/run/docker.sock:/var/run/docker.sock projectatomic/dockerfile-lint dockerfile_lint -f Dockerfile -r policies/security_rules.yml
+
+
+build_hugo_builder: lint dockerlint_policies_check
 	@echo "Building Hugo Builder container..."
 	@docker build -t finshare/hugo-builder .
 	@echo "Hugo Builder container built!"
@@ -19,6 +24,10 @@ build_website: build_hugo_builder
 	@echo "Building website..."
 	@docker container run -v $(PWD)/orgdocs:/src finshare/hugo-builder hugo
 	@echo "Website builded!"
+
+trivy_scanner: build_website
+	@echo "Scanning immage"
+	@docker run -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --scanners vuln,secret,misconfig finshare/hugo-builder
 
 serve_website: build_website
 	@echo "Serving website"
