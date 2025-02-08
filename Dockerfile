@@ -1,6 +1,17 @@
 FROM alpine:3.21.0
 
-LABEL org.opencontainers.image.authors="<psellars@gmail.com>"
+ARG BUILD_DATE
+ARG IMAGE_VERSION
+ARG COMMIT_SHA
+ARG BUILD_VERSION=0.0.1
+
+LABEL org.opencontainers.image.authors="<kalebasiakw@gmail.com>"
+LABEL org.opencontainers.image.created=${BUILD_DATE}
+LABEL org.opencontainers.image.revision=${COMMIT_SHA}
+LABEL org.opencontainers.image.version=${IMAGE_VERSION}
+LABEL org.opencontainers.image.licenses=MIT
+LABEL org.opencontainers.image.source=https://github.com/wojciechkaleb/docker-container-security-lp
+LABEL org.opencontainers.image.title=MannerHugoBuilder
 
 ENV VERSION=0.64.0
 ARG HUGO_BINARY=hugo_${VERSION}_Linux-64bit.tar.gz
